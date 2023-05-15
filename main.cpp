@@ -27,14 +27,14 @@ struct fds {
 
 int set_nonblock(int fd) {
     int flags;
-#if defined(O_NONBLOCK)
-    if (-1 == (flags = fcntl(fd, F_GETFL, 0)))
-        flags = 0;
-    return fcntl(fd, F_SETFL, (unsigned) flags | O_NONBLOCK);
-#else
-    flags = 1;
-    return ioctl(fd, FIONBIO, &flags);
-#endif
+    #if defined(O_NONBLOCK)
+        if (-1 == (flags = fcntl(fd, F_GETFL, 0)))
+            flags = 0;
+        return fcntl(fd, F_SETFL, (unsigned) flags | O_NONBLOCK);
+    #else
+        flags = 1;
+        return ioctl(fd, FIONBIO, &flags);
+    #endif
 
 }
 
@@ -55,7 +55,7 @@ std::string parse_request(const std::string &target) {
     std::size_t second = target.find(" HTTP/1");
     if (first == std::string::npos || second == std::string::npos) return "";
     std::string ind = target.substr(first + 5, second - first - 5);
-    if (ind.size() == 0) return "index.html";
+    if (ind.empty()) return "index.html";
 
     auto pos = ind.find('?');
     if (pos == std::string::npos)
@@ -66,26 +66,20 @@ std::string parse_request(const std::string &target) {
 
 std::string http_error_404() {
     std::stringstream ss;
-    ss << "HTTP/1.0 404 NOT FOUND";
-    ss << "\r\n";
-    ss << "Content-length: 0";
-    ss << "\r\n";
-    ss << "Content-Type: text/html";
-    ss << "\r\n\r\n";
+    ss << "HTTP/1.0 404 NOT FOUND\r\n";
+    ss << "Content-length: 0\r\n";
+    ss << "Content-Type: text/html\r\n\r\n";
+
     return ss.str();
 }
 
 std::string http_ok_200(const std::string &data) {
     std::stringstream ss;
-    ss << "HTTP/1.0 200 OK";
-    ss << "\r\n";
-    ss << "Content-length: ";
-    ss << data.size();
-    ss << "\r\n";
-    ss << "Content-Type: text/html";
-    ss << "\r\n";
-    ss << "\r\n";
+    ss << "HTTP/1.0 200 OK\r\n";
+    ss << "Content-length: " << data.size() << "\r\n";
+    ss << "Content-Type: text/html\r\n\r\n";
     ss << data;
+
     return ss.str();
 }
 
@@ -98,7 +92,7 @@ inline void f(int &fd, const std::string &request) {
     else
     {
         std::string ind = request.substr(first + 5, second - first - 5);
-        if (ind.size() == 0) 
+        if (ind.empty()) 
             f_name = "index.html";
         else
         {
